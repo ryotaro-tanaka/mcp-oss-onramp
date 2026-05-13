@@ -1,6 +1,6 @@
 # mcp-oss-onramp (日本語版)
 
-**AIスカウト。最初のPRを。**
+**AI Scout. First PR.**
 
 `mcp-oss-onramp`は、AIエージェントが「本当に未割り当て」かつ「初心者向け」なGitHub Issueを見つけるためのMCPサーバです。
 
