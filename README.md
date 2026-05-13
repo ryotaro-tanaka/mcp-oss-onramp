@@ -8,14 +8,14 @@
 
 ## Vision
 
-OSS contribution should be frictionless. While GitHub labels like `good first issue` exist, many issues are already being worked on or have abandoned PRs. This tool provides AI agents with the "eyes" to see through the noise, detecting hidden PR links and assignee status to find the perfect entry point for your next contribution.
+OSS contribution should be frictionless. While labels like `good first issue` exist, many beginner-friendly tasks remain unlabeled, or are already being worked on by "ghost" PRs. This tool acts as a **high-precision sensor** for AI agents, providing them with the clean, cross-referenced data they need to identify truly open, low-barrier entry points for your next contribution.
 
 ## Features
 
-- **True Availability Detection**: Goes beyond basic filters to detect linked PRs even in comments/descriptions.
-- **AI-Optimized Data**: Cleans and summarizes issue bodies for efficient LLM consumption.
-- **Onboarding Focused**: Specifically tuned to find high-success, low-barrier tasks.
-- **MCP Native**: Designed to be used directly by AI agents like Gemini CLI, Claude Code, and Cursor.
+- **Beyond Labels**: Detects "hidden" beginner tasks by analyzing keywords and inactivity, even without explicit labels.
+- **True Availability Detection**: Sees through the noise to detect linked PRs in comments and descriptions.
+- **AI-Ready Context**: Cleans and summarizes issue data so your AI agent can effectively judge difficulty and fit.
+- **MCP Native**: Built for leading AI agents including **Gemini CLI**, **Claude Code**, **Cursor**, and **Windsurf**.
 
 ## How it Works
 
