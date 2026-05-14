@@ -116,7 +116,7 @@ async function scoutIssues(repository: string) {
 
     const beginnerKeywords = ['good first issue', 'documentation', 'docs', 'readme', 'link', 'typo', 'beginner'];
     
-    return issues.map(issue => {
+    const results = issues.map(issue => {
       const labels = issue.labels.nodes.map(l => l.name.toLowerCase());
       const titleLower = issue.title.toLowerCase();
       
@@ -157,6 +157,22 @@ async function scoutIssues(repository: string) {
         updated_at: issue.updatedAt
       };
     });
+
+    const recommended = results.filter(r => r.recommendation_level === "High");
+    const in_progress = results.filter(r => r.recommendation_level === "Medium");
+    const other_recent = results.filter(r => r.recommendation_level === "Low").slice(0, 10);
+
+    return {
+      stats: {
+        total_scanned: results.length,
+        recommended_count: recommended.length,
+        in_progress_count: in_progress.length,
+        other_count: results.length - recommended.length - in_progress.length
+      },
+      recommended,
+      in_progress,
+      other_recent
+    };
   } catch (error: any) {
     throw new Error(`Failed to scout issues via GraphQL: ${error.message}`);
   }
