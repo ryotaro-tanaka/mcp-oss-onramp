@@ -7,16 +7,31 @@ import {
 import { execSync } from "child_process";
 
 /**
- * Interface for GitHub Issue/PR data
+ * Interface for GitHub GraphQL response
  */
-interface GitHubItem {
-  number: number;
-  title: string;
-  body: string;
-  url: string;
-  labels: { name: string }[];
-  assignees: { login: string }[];
-  updatedAt: string;
+interface GraphQLResponse {
+  data: {
+    repository: {
+      issues: {
+        nodes: {
+          number: number;
+          title: string;
+          body: string;
+          url: string;
+          updatedAt: string;
+          labels: { nodes: { name: string }[] };
+          assignees: { nodes: { login: string }[] };
+          timelineItems: {
+            nodes: {
+              __typename: string;
+              source?: { number: number; state: string };
+              subject?: { number: number; state: string };
+            }[];
+          };
+        }[];
+      };
+    };
+  };
 }
 
 const server = new Server(
@@ -43,62 +58,93 @@ function cleanBody(body: string): string {
 }
 
 /**
- * Heuristic to detect linked issue numbers in PR text
+ * Scout issues in a repository using GraphQL
  */
-function getLinkedIssues(text: string): number[] {
-  const patterns = [
-    /(?:fixe?s?|close?s?|resolve?s?|refs?|#)\s*#?(\d+)/gi
-  ];
-  const linked = new Set<number>();
-  for (const pattern of patterns) {
-    let match;
-    while ((match = pattern.exec(text)) !== null) {
-      linked.add(parseInt(match[1]));
-    }
+async function scoutIssues(repository: string) {
+  const [owner, name] = repository.split("/");
+  if (!owner || !name) {
+    throw new Error("Repository must be in 'owner/name' format");
   }
-  return Array.from(linked);
-}
 
-/**
- * Scout issues in a repository
- */
-async function scoutIssues(repository: string, filterLabels?: string[]) {
-  try {
-    // Fetch issues
-    const issuesRaw = execSync(
-      `gh issue list -R ${repository} --state open --limit 50 --json number,title,body,url,labels,assignees,updatedAt`,
-      { encoding: "utf8" }
-    );
-    const issues: GitHubItem[] = JSON.parse(issuesRaw);
-
-    // Fetch PRs to detect linked/ghost tasks
-    const prsRaw = execSync(
-      `gh pr list -R ${repository} --state open --limit 50 --json number,title,body`,
-      { encoding: "utf8" }
-    );
-    const prs: GitHubItem[] = JSON.parse(prsRaw);
-
-    const busyIssueNumbers = new Set<number>();
-    for (const pr of prs) {
-      const linked = getLinkedIssues((pr.title || "") + " " + (pr.body || ""));
-      linked.forEach(num => busyIssueNumbers.add(num));
+  // Use timelineItems to find connected/cross-referenced PRs
+  const query = `
+    query($owner:String!, $name:String!) {
+      repository(owner:$owner, name:$name) {
+        issues(first: 50, states: OPEN, orderBy: {field: UPDATED_AT, direction: DESC}) {
+          nodes {
+            number
+            title
+            body
+            url
+            updatedAt
+            labels(first: 10) { nodes { name } }
+            assignees(first: 5) { nodes { login } }
+            timelineItems(first: 20, itemTypes: [CONNECTED_EVENT, CROSS_REFERENCED_EVENT]) {
+              nodes {
+                __typename
+                ... on ConnectedEvent {
+                  subject {
+                    ... on PullRequest {
+                      number
+                      state
+                    }
+                  }
+                }
+                ... on CrossReferencedEvent {
+                  source {
+                    ... on PullRequest {
+                      number
+                      state
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
+  `;
 
-    const beginnerKeywords = ['good first issue', 'documentation', 'docs', 'readme', 'link', 'typo', 'beginner', 'easy'];
+  try {
+    const responseRaw = execSync(
+      `gh api graphql -f query='${query}' -f owner='${owner}' -f name='${name}'`,
+      { encoding: "utf8" }
+    );
+    const response: GraphQLResponse = JSON.parse(responseRaw);
+    const issues = response.data.repository.issues.nodes;
+
+    const beginnerKeywords = ['good first issue', 'documentation', 'docs', 'readme', 'link', 'typo', 'beginner'];
     
     return issues.map(issue => {
-      const hasAssignee = issue.assignees.length > 0;
-      const hasPR = busyIssueNumbers.has(issue.number);
-      const isMaybeBusy = hasAssignee || hasPR;
-      
-      const labels = issue.labels.map(l => l.name.toLowerCase());
+      const labels = issue.labels.nodes.map(l => l.name.toLowerCase());
       const titleLower = issue.title.toLowerCase();
       
-      const signals: string[] = [];
-      if (!hasAssignee) signals.push("no_assignee");
-      if (!hasPR) signals.push("no_active_pr");
-      if (beginnerKeywords.some(kw => labels.includes(kw) || titleLower.includes(kw))) {
-        signals.push("beginner_friendly_keywords");
+      const isBeginner = beginnerKeywords.some(kw => 
+        labels.includes(kw) || titleLower.includes(kw)
+      );
+
+      const hasAssignee = issue.assignees.nodes.length > 0;
+      
+      // Check for any linked PR that is still OPEN
+      const hasActivePR = issue.timelineItems.nodes.some(item => {
+        const pr = item.source || item.subject;
+        return pr && pr.state === "OPEN";
+      });
+      
+      const isAvailable = !hasAssignee && !hasActivePR;
+
+      let recommendation_level = "Low";
+      let status_label = "Other";
+
+      if (isBeginner) {
+        if (isAvailable) {
+          recommendation_level = "High";
+          status_label = "Available";
+        } else {
+          recommendation_level = "Medium";
+          status_label = "In Progress / Assigned";
+        }
       }
 
       return {
@@ -106,13 +152,13 @@ async function scoutIssues(repository: string, filterLabels?: string[]) {
         title: issue.title,
         summary: cleanBody(issue.body),
         url: issue.url,
-        status: isMaybeBusy ? "Maybe Busy" : "Available",
-        signals: signals,
+        status: status_label,
+        recommendation_level: recommendation_level,
         updated_at: issue.updatedAt
       };
     });
   } catch (error: any) {
-    throw new Error(`Failed to scout issues: ${error.message}`);
+    throw new Error(`Failed to scout issues via GraphQL: ${error.message}`);
   }
 }
 
@@ -124,18 +170,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       {
         name: "scout_issues",
-        description: "Scout a GitHub repository for truly available, beginner-friendly issues. Detects 'ghost' tasks by cross-referencing PRs and comments.",
+        description: "Scout a GitHub repository for truly available, beginner-friendly issues. Detects 'ghost' tasks by checking linked PRs via timeline events.",
         inputSchema: {
           type: "object",
           properties: {
             repository: {
               type: "string",
               description: "Full repository name (e.g., 'owner/repo')",
-            },
-            labels: {
-              type: "array",
-              items: { type: "string" },
-              description: "Optional list of labels to filter by",
             },
           },
           required: ["repository"],
@@ -150,12 +191,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
  */
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   if (request.params.name === "scout_issues") {
-    const { repository, labels } = request.params.arguments as {
+    const { repository } = request.params.arguments as {
       repository: string;
-      labels?: string[];
     };
 
-    const results = await scoutIssues(repository, labels);
+    const results = await scoutIssues(repository);
     return {
       content: [{ type: "text", text: JSON.stringify(results, null, 2) }],
     };
