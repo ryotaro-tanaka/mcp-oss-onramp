@@ -30,35 +30,37 @@ The `scout_issues` tool returns a grouped JSON object to help AI agents prioriti
 ```json
 {
   "stats": {
-    "total_scanned": 50,
-    "recommended_count": 2,
-    "in_progress_count": 5,
-    "other_count": 43
+    "total_scanned": 26,
+    "recommended_count": 1,
+    "in_progress_count": 3,
+    "other_count": 22
   },
   "recommended": [
     {
-      "issue_number": 123,
-      "title": "Fix broken link in README",
-      "summary": "The link to docs is 404...",
-      "url": "https://github.com/owner/repo/issues/123",
+      "issue_number": 230,
+      "title": "Fix typo in contribution guide",
+      "summary": "There is a typo in the 'Getting Started' section of CONTRIBUTING.md. 'intall' should be 'install'...",
+      "url": "https://github.com/owner/repo/issues/230",
       "status": "Available",
       "recommendation_level": "High",
-      "updated_at": "2026-05-14T10:00:00Z"
+      "updated_at": "2026-05-14T12:00:00Z"
     }
   ],
   "in_progress": [
     {
-      "issue_number": 124,
-      "title": "Update API docs",
+      "issue_number": 229,
+      "title": "Broken `CLI Reference` link in published README (404 on npm and post-install)",
+      "summary": "The `README.md` shipped with `@aisuite/chub@0.1.4` links to a non-existent `cli-reference.md`...",
+      "url": "https://github.com/andrewyng/context-hub/issues/229",
       "status": "In Progress / Assigned",
       "recommendation_level": "Medium",
-      "updated_at": "2026-05-14T09:00:00Z"
+      "updated_at": "2026-04-28T22:12:21Z"
     }
   ],
   "other_recent": [
     {
-      "issue_number": 125,
-      "title": "Add feature X",
+      "issue_number": 41,
+      "title": "version specific docs",
       "status": "Other",
       "recommendation_level": "Low"
     }
