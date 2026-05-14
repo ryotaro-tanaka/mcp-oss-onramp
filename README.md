@@ -20,8 +20,51 @@ OSS contribution should be frictionless. While labels like `good first issue` ex
 ## How it Works
 
 1.  **Scout**: AI agent calls the tool with a repository name.
-2.  **Filter**: The server fetches issues and PRs, cross-referencing them to find "ghost" tasks that are open but unassigned.
-3.  **Report**: Returns a structured, concise list of recommended issues for the AI to present to the user.
+2.  **Filter**: The server fetches issues and PRs using GitHub GraphQL, identifying truly unassigned tasks.
+3.  **Report**: Returns a structured, grouped JSON response.
+
+### Tool Output Schema
+
+The `scout_issues` tool returns a grouped JSON object to help AI agents prioritize recommendations:
+
+```json
+{
+  "stats": {
+    "total_scanned": 50,
+    "recommended_count": 2,
+    "in_progress_count": 5,
+    "other_count": 43
+  },
+  "recommended": [
+    {
+      "issue_number": 123,
+      "title": "Fix broken link in README",
+      "summary": "The link to docs is 404...",
+      "url": "https://github.com/owner/repo/issues/123",
+      "status": "Available",
+      "recommendation_level": "High",
+      "updated_at": "2026-05-14T10:00:00Z"
+    }
+  ],
+  "in_progress": [
+    {
+      "issue_number": 124,
+      "title": "Update API docs",
+      "status": "In Progress / Assigned",
+      "recommendation_level": "Medium",
+      "updated_at": "2026-05-14T09:00:00Z"
+    }
+  ],
+  "other_recent": [
+    {
+      "issue_number": 125,
+      "title": "Add feature X",
+      "status": "Other",
+      "recommendation_level": "Low"
+    }
+  ]
+}
+```
 
 ## Getting Started
 
