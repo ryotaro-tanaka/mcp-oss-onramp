@@ -1,13 +1,32 @@
 {
   "name": "mcp-oss-onramp",
   "version": "0.1.0",
-  "description": "MCP server to scout beginner-friendly OSS issues",
+  "description": "MCP server to scout beginner-friendly OSS issues with high precision using GitHub GraphQL",
+  "license": "MIT",
+  "author": "Ryotaro Tanaka",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ryotaro-tanaka/mcp-oss-onramp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ryotaro-tanaka/mcp-oss-onramp/issues"
+  },
+  "homepage": "https://github.com/ryotaro-tanaka/mcp-oss-onramp#readme",
+  "keywords": [
+    "mcp",
+    "github",
+    "oss",
+    "beginner-friendly",
+    "good-first-issue",
+    "automation"
+  ],
   "type": "module",
   "bin": {
     "mcp-oss-onramp": "./build/index.js"
   },
   "files": [
-    "build"
+    "build",
+    "README_ja.md"
   ],
   "scripts": {
     "build": "tsc",

@@ -66,13 +66,44 @@ The `scout_issues` tool returns a grouped JSON object to help AI agents prioriti
 }
 ```
 
-## Getting Started
+## Installation
 
-*(Detailed installation instructions for MCP environments to be added)*
+### Via npx
+You can run the server directly using `npx`:
 
-### Prerequisites
-- [GitHub CLI (gh)](https://cli.github.com/)
-- An MCP-compatible AI agent
+```bash
+npx mcp-oss-onramp
+```
+
+### Configuration for AI Agents
+
+#### Claude Desktop
+Add this to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "oss-onramp": {
+      "command": "npx",
+      "args": ["-y", "mcp-oss-onramp"]
+    }
+  }
+}
+```
+
+#### Gemini CLI
+Add this to your `config.yaml` or relevant configuration:
+
+```yaml
+mcpServers:
+  oss-onramp:
+    command: npx
+    args: ["-y", "mcp-oss-onramp"]
+```
+
+## Prerequisites
+- [GitHub CLI (gh)](https://cli.github.com/) (authenticated)
+- Node.js 18+
 
 ## License
 
