@@ -187,7 +187,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       {
         name: "scout_issues",
-        description: "Scout a GitHub repository for truly available, beginner-friendly issues. Detects 'ghost' tasks by checking linked PRs via timeline events.",
+        description: "Scout a GitHub repository to discover truly available, beginner-friendly issues. Use this when a user wants to start contributing to OSS, needs a 'good first issue', or wants to verify if an issue is genuinely unassigned by cross-referencing linked Pull Requests (detecting 'ghost' tasks).",
         inputSchema: {
           type: "object",
           properties: {
