@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "MCP server to scout beginner-friendly OSS issues with high precision using GitHub GraphQL",
   "license": "MIT",
-  "author": "Ryotaro Tanaka",
+  "author": "ryotaro-tanaka",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ryotaro-tanaka/mcp-oss-onramp.git"
@@ -26,7 +26,7 @@
   },
   "files": [
     "build",
-    "README_ja.md"
+    "docs/README_ja.md"
   ],
   "scripts": {
     "build": "tsc",

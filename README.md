@@ -2,7 +2,7 @@
 
 **AI Scout. First PR.**
 
-[日本語版はこちら](./README_ja.md)
+[日本語版はこちら](./docs/README_ja.md)
 
 `mcp-oss-onramp` is an MCP server that empowers AI agents to discover truly unassigned, beginner-friendly GitHub issues.
 
