@@ -25,8 +25,7 @@
     "mcp-oss-onramp": "./build/index.js"
   },
   "files": [
-    "build",
-    "docs/README_npm.md"
+    "build"
   ],
   "scripts": {
     "build": "tsc",

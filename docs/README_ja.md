@@ -4,7 +4,7 @@
 
 `mcp-oss-onramp`は、AIエージェントが「本当に未割り当て」かつ「初心者向け」なGitHub Issueを見つけるためのMCPサーバです。
 
-[English README](../README.md)
+[English README](../README.md) | [詳細ドキュメント (English)](./README_full.md)
 
 ## ビジョン
 
