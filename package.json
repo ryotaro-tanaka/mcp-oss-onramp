@@ -22,7 +22,7 @@
   ],
   "type": "module",
   "bin": {
-    "mcp-oss-onramp": "./build/index.js"
+    "mcp-oss-onramp": "build/index.js"
   },
   "files": [
     "build"
