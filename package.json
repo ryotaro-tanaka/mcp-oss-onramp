@@ -26,7 +26,7 @@
   },
   "files": [
     "build",
-    "docs/README_ja.md"
+    "docs/README_npm.md"
   ],
   "scripts": {
     "build": "tsc",
