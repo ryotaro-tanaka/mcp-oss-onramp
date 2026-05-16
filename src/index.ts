@@ -38,7 +38,7 @@ interface GraphQLResponse {
 const server = new Server(
   {
     name: "mcp-oss-onramp",
-    version: "0.1.0",
+    version: "0.1.1",
   },
   {
     capabilities: {
@@ -225,6 +225,35 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
  * Start server
  */
 async function main() {
+  const args = process.argv.slice(2);
+  if (args.includes("--help") || args.includes("-h")) {
+    console.log(`
+MCP OSS Onramp Server v0.1.2
+
+Usage:
+  npx mcp-oss-onramp [options]
+
+Options:
+  -h, --help     Show this help message
+  -v, --version  Show version information
+
+Description:
+  An MCP (Model Context Protocol) server that provides tools to scout 
+  beginner-friendly OSS issues. This server is designed to be called 
+  by AI agents (like Claude Desktop) using the stdio transport.
+
+Requirements:
+  - GitHub CLI (gh) must be installed and authenticated ('gh auth login')
+  - Node.js 18 or higher
+    `);
+    process.exit(0);
+  }
+
+  if (args.includes("--version") || args.includes("-v")) {
+    console.log("0.1.2");
+    process.exit(0);
+  }
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("MCP OSS Onramp server running on stdio");
