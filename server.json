@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.ryotaro-tanaka/mcp-oss-onramp",
+  "description": "MCP server to scout beginner-friendly OSS issues with high precision using GitHub GraphQL",
+  "repository": {
+    "url": "https://github.com/ryotaro-tanaka/mcp-oss-onramp.git",
+    "source": "github"
+  },
+  "version": "0.1.2",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "mcp-oss-onramp",
+      "version": "0.1.2",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

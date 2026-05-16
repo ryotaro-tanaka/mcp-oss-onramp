@@ -1,5 +1,6 @@
 {
   "name": "mcp-oss-onramp",
+  "mcpName": "io.github.ryotaro-tanaka/mcp-oss-onramp",
   "version": "0.1.2",
   "description": "MCP server to scout beginner-friendly OSS issues with high precision using GitHub GraphQL",
   "license": "MIT",
