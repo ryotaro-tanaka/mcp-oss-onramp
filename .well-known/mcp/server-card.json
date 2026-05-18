@@ -1,0 +1,21 @@
+{
+  "name": "mcp-oss-onramp",
+  "version": "0.1.3",
+  "description": "Scout truly available, beginner-friendly GitHub issues by detecting ghost tasks.",
+  "tools": [
+    {
+      "name": "scout_issues",
+      "description": "Scout a GitHub repository to discover truly available, beginner-friendly issues. Detects ghost tasks by cross-referencing linked PRs.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repository": {
+            "type": "string",
+            "description": "Full repository name (e.g., owner/repo)"
+          }
+        },
+        "required": ["repository"]
+      }
+    }
+  ]
+}
