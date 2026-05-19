@@ -69,8 +69,12 @@ interface GraphQLIssueNode {
  * Get GitHub token from environment or GH CLI
  */
 function getGitHubToken(): string | null {
-  // 1. Try environment variables
-  const envToken = process.env.GITHUB_TOKEN || process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
+  // 1. Try environment variables (Priority: Specific > Standard)
+  const envToken = 
+    process.env.MCP_OSS_ONRAMP_GITHUB_TOKEN || 
+    process.env.GITHUB_TOKEN || 
+    process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
+  
   if (envToken) return envToken;
 
   // 2. Try GH CLI
@@ -365,7 +369,7 @@ Description:
   by AI agents (like Claude Desktop) using the stdio transport.
 
 Requirements:
-  - GitHub Token (set via GITHUB_TOKEN environment variable) [Recommended]
+  - GitHub Token (set via MCP_OSS_ONRAMP_GITHUB_TOKEN or GITHUB_TOKEN) [Recommended]
   - OR GitHub CLI (gh) installed and authenticated ('gh auth login')
   - Node.js 18 or higher
 
