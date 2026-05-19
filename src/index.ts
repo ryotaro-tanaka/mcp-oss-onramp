@@ -6,33 +6,100 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { execSync } from "child_process";
+import { Octokit } from "@octokit/core";
+import { readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
  * Interface for GitHub GraphQL response
  */
 interface GraphQLResponse {
-  data: {
-    repository: {
-      issues: {
-        nodes: {
-          number: number;
-          title: string;
-          body: string;
-          url: string;
-          updatedAt: string;
-          labels: { nodes: { name: string }[] };
-          assignees: { nodes: { login: string }[] };
-          timelineItems: {
-            nodes: {
-              __typename: string;
-              source?: { number: number; state: string };
-              subject?: { number: number; state: string };
-            }[];
-          };
-        }[];
-      };
+  repository: {
+    issues: {
+      nodes: {
+        number: number;
+        title: string;
+        body: string;
+        url: string;
+        updatedAt: string;
+        labels: { nodes: { name: string }[] };
+        assignees: { nodes: { login: string }[] };
+        timelineItems: {
+          nodes: {
+            __typename: string;
+            source?: { number: number; state: string };
+            subject?: { number: number; state: string };
+          }[];
+        };
+      }[];
     };
   };
+}
+
+/**
+ * Interface for simplified issue result
+ */
+interface IssueResult {
+  issue_number: number;
+  title: string;
+  summary: string;
+  url: string;
+  status: string;
+  recommendation_level: string;
+  updated_at: string;
+}
+
+interface GraphQLIssueNode {
+  number: number;
+  title: string;
+  body: string;
+  url: string;
+  updatedAt: string;
+  labels: { nodes: { name: string }[] };
+  assignees: { nodes: { login: string }[] };
+  timelineItems: {
+    nodes: any[]; // Simplified for the map function
+  };
+}
+
+/**
+ * Get GitHub token from environment or GH CLI
+ */
+function getGitHubToken(): string | null {
+  // 1. Try environment variables
+  const envToken = process.env.GITHUB_TOKEN || process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
+  if (envToken) return envToken;
+
+  // 2. Try GH CLI
+  try {
+    return execSync("gh auth token", { encoding: "utf8" }).trim();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Load fallback sample data
+ */
+function getSampleData() {
+  try {
+    const samplePath = join(__dirname, "..", "samples", "scout_result_grouped.json");
+    const content = readFileSync(samplePath, "utf8");
+    const parsed = JSON.parse(content);
+    // The sample file has a specific structure: {"result":{"content":[{"type":"text","text":"..."}]}}
+    if (parsed.result?.content?.[0]?.text) {
+      return JSON.parse(parsed.result.content[0].text);
+    }
+    return parsed;
+  } catch (error) {
+    return {
+      error: "Failed to load sample data",
+      message: "Please provide a GITHUB_TOKEN or login via 'gh auth login' for live data."
+    };
+  }
 }
 
 const server = new Server(
@@ -59,7 +126,7 @@ function cleanBody(body: string): string {
 }
 
 /**
- * Scout issues in a repository using GraphQL
+ * Scout issues in a repository using GraphQL or REST (Hybrid Mode)
  */
 async function scoutIssues(repository: string) {
   const [owner, name] = repository.split("/");
@@ -67,35 +134,45 @@ async function scoutIssues(repository: string) {
     throw new Error("Repository must be in 'owner/name' format");
   }
 
-  // Use timelineItems to find connected/cross-referenced PRs
-  const query = `
-    query($owner:String!, $name:String!) {
-      repository(owner:$owner, name:$name) {
-        issues(first: 50, states: OPEN, orderBy: {field: UPDATED_AT, direction: DESC}) {
-          nodes {
-            number
-            title
-            body
-            url
-            updatedAt
-            labels(first: 10) { nodes { name } }
-            assignees(first: 5) { nodes { login } }
-            timelineItems(first: 20, itemTypes: [CONNECTED_EVENT, CROSS_REFERENCED_EVENT]) {
+  const token = getGitHubToken();
+  const octokit = new Octokit(token ? { auth: token } : {});
+  const beginnerKeywords = ['good first issue', 'documentation', 'docs', 'readme', 'link', 'typo', 'beginner'];
+
+  try {
+    let results: IssueResult[] = [];
+
+    if (token) {
+      // --- Authenticated Mode (High Precision via GraphQL) ---
+      const query = `
+        query($owner:String!, $name:String!) {
+          repository(owner:$owner, name:$name) {
+            issues(first: 50, states: OPEN, orderBy: {field: UPDATED_AT, direction: DESC}) {
               nodes {
-                __typename
-                ... on ConnectedEvent {
-                  subject {
-                    ... on PullRequest {
-                      number
-                      state
+                number
+                title
+                body
+                url
+                updatedAt
+                labels(first: 10) { nodes { name } }
+                assignees(first: 5) { nodes { login } }
+                timelineItems(first: 20, itemTypes: [CONNECTED_EVENT, CROSS_REFERENCED_EVENT]) {
+                  nodes {
+                    __typename
+                    ... on ConnectedEvent {
+                      subject {
+                        ... on PullRequest {
+                          number
+                          state
+                        }
+                      }
                     }
-                  }
-                }
-                ... on CrossReferencedEvent {
-                  source {
-                    ... on PullRequest {
-                      number
-                      state
+                    ... on CrossReferencedEvent {
+                      source {
+                        ... on PullRequest {
+                          number
+                          state
+                        }
+                      }
                     }
                   }
                 }
@@ -103,61 +180,93 @@ async function scoutIssues(repository: string) {
             }
           }
         }
-      }
-    }
-  `;
+      `;
 
-  try {
-    const responseRaw = execSync(
-      `gh api graphql -f query='${query}' -f owner='${owner}' -f name='${name}'`,
-      { encoding: "utf8" }
-    );
-    const response: GraphQLResponse = JSON.parse(responseRaw);
-    const issues = response.data.repository.issues.nodes;
+      const response = await octokit.graphql<GraphQLResponse>(query, { owner, name });
+      const issues = response.repository.issues.nodes;
 
-    const beginnerKeywords = ['good first issue', 'documentation', 'docs', 'readme', 'link', 'typo', 'beginner'];
-    
-    const results = issues.map(issue => {
-      const labels = issue.labels.nodes.map(l => l.name.toLowerCase());
-      const titleLower = issue.title.toLowerCase();
-      
-      const isBeginner = beginnerKeywords.some(kw => 
-        labels.includes(kw) || titleLower.includes(kw)
-      );
+      results = issues.map((issue: GraphQLIssueNode) => {
+        const labels = issue.labels.nodes.map((l: { name: string }) => l.name.toLowerCase());
+        const titleLower = issue.title.toLowerCase();
+        const isBeginner = beginnerKeywords.some(kw => labels.includes(kw) || titleLower.includes(kw));
+        const hasAssignee = issue.assignees.nodes.length > 0;
+        
+        // Check for any linked PR that is still OPEN
+        const hasActivePR = issue.timelineItems.nodes.some((item: any) => {
+          const pr = item.source || item.subject;
+          return pr && pr.state === "OPEN";
+        });
+        
+        const isAvailable = !hasAssignee && !hasActivePR;
+        let recommendation_level = "Low";
+        let status_label = "Other";
 
-      const hasAssignee = issue.assignees.nodes.length > 0;
-      
-      // Check for any linked PR that is still OPEN
-      const hasActivePR = issue.timelineItems.nodes.some(item => {
-        const pr = item.source || item.subject;
-        return pr && pr.state === "OPEN";
-      });
-      
-      const isAvailable = !hasAssignee && !hasActivePR;
-
-      let recommendation_level = "Low";
-      let status_label = "Other";
-
-      if (isBeginner) {
-        if (isAvailable) {
-          recommendation_level = "High";
-          status_label = "Available";
-        } else {
-          recommendation_level = "Medium";
-          status_label = "In Progress / Assigned";
+        if (isBeginner) {
+          if (isAvailable) {
+            recommendation_level = "High";
+            status_label = "Available";
+          } else {
+            recommendation_level = "Medium";
+            status_label = "In Progress / Assigned";
+          }
         }
-      }
 
-      return {
-        issue_number: issue.number,
-        title: issue.title,
-        summary: cleanBody(issue.body),
-        url: issue.url,
-        status: status_label,
-        recommendation_level: recommendation_level,
-        updated_at: issue.updatedAt
-      };
-    });
+        return {
+          issue_number: issue.number,
+          title: issue.title,
+          summary: cleanBody(issue.body),
+          url: issue.url,
+          status: status_label,
+          recommendation_level: recommendation_level,
+          updated_at: issue.updatedAt
+        };
+      });
+    } else {
+      // --- Unauthenticated Mode (Low Precision via REST) ---
+      const response = await octokit.request('GET /repos/{owner}/{repo}/issues', {
+        owner,
+        repo: name,
+        state: 'open',
+        sort: 'updated',
+        direction: 'desc',
+        per_page: 50
+      });
+
+      results = response.data.map((issue: any) => {
+        // Skip Pull Requests (GitHub REST API returns both in /issues)
+        if (issue.pull_request) return null;
+
+        const labels = issue.labels.map((l: any) => (typeof l === 'string' ? l : l.name).toLowerCase());
+        const titleLower = issue.title.toLowerCase();
+        const isBeginner = beginnerKeywords.some(kw => labels.includes(kw) || titleLower.includes(kw));
+        const hasAssignee = issue.assignees && issue.assignees.length > 0;
+        
+        // REST API doesn't easily give us timeline/cross-references in one call
+        // We mark it as potentially available but with a disclaimer
+        let recommendation_level = "Low";
+        let status_label = "Other (Auth required for precision)";
+
+        if (isBeginner) {
+          if (!hasAssignee) {
+            recommendation_level = "High";
+            status_label = "Likely Available (Auth required for precision)";
+          } else {
+            recommendation_level = "Medium";
+            status_label = "Assigned (Auth required for precision)";
+          }
+        }
+
+        return {
+          issue_number: issue.number,
+          title: issue.title,
+          summary: cleanBody(issue.body || ""),
+          url: issue.html_url,
+          status: status_label,
+          recommendation_level: recommendation_level,
+          updated_at: issue.updated_at
+        };
+      }).filter(Boolean) as IssueResult[];
+    }
 
     const recommended = results.filter(r => r.recommendation_level === "High");
     const in_progress = results.filter(r => r.recommendation_level === "Medium");
@@ -168,14 +277,25 @@ async function scoutIssues(repository: string) {
         total_scanned: results.length,
         recommended_count: recommended.length,
         in_progress_count: in_progress.length,
-        other_count: results.length - recommended.length - in_progress.length
+        other_count: results.length - recommended.length - in_progress.length,
+        auth_mode: token ? "Authenticated" : "Unauthenticated (Rate limited, low precision)"
       },
       recommended,
       in_progress,
-      other_recent
+      other_recent,
+      _notice: token ? undefined : "High precision scouting (PR cross-referencing) requires a GitHub token. Please set GITHUB_TOKEN or login with 'gh auth login'."
     };
   } catch (error: any) {
-    throw new Error(`Failed to scout issues via GraphQL: ${error.message}`);
+    // If rate limit hit (403) or generic error in unauthenticated mode, fallback to sample data
+    if (error.status === 403 || error.status === 401 || !token) {
+      const sample = getSampleData();
+      return {
+        ...sample,
+        _notice: "Rate limit reached or authentication failed. Returning sample data. Please provide GITHUB_TOKEN for live results.",
+        _original_error: error.message
+      };
+    }
+    throw new Error(`Failed to scout issues: ${error.message}`);
   }
 }
 
@@ -226,9 +346,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
  */
 async function main() {
   const args = process.argv.slice(2);
+  const version = "0.1.3";
+
   if (args.includes("--help") || args.includes("-h")) {
     console.log(`
-MCP OSS Onramp Server v0.1.2
+MCP OSS Onramp Server v${version}
 
 Usage:
   npx mcp-oss-onramp [options]
@@ -243,20 +365,27 @@ Description:
   by AI agents (like Claude Desktop) using the stdio transport.
 
 Requirements:
-  - GitHub CLI (gh) must be installed and authenticated ('gh auth login')
+  - GitHub Token (set via GITHUB_TOKEN environment variable) [Recommended]
+  - OR GitHub CLI (gh) installed and authenticated ('gh auth login')
   - Node.js 18 or higher
+
+Note: High precision scouting requires authentication.
     `);
     process.exit(0);
   }
 
   if (args.includes("--version") || args.includes("-v")) {
-    console.log("0.1.2");
+    console.log(version);
     process.exit(0);
   }
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("MCP OSS Onramp server running on stdio");
+  
+  const token = getGitHubToken();
+  const authStatus = token ? "Authenticated (High Precision)" : "Unauthenticated (Low Precision / Rate Limited)";
+  console.error(`MCP OSS Onramp server v${version} running on stdio`);
+  console.error(`Authentication: ${authStatus}`);
 }
 
 main().catch((error) => {

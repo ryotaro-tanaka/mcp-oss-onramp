@@ -35,7 +35,8 @@
     "start": "node build/index.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.1"
+    "@modelcontextprotocol/sdk": "^1.0.1",
+    "@octokit/core": "^7.0.6"
   },
   "devDependencies": {
     "@types/node": "^20.11.24",
