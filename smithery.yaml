@@ -1,0 +1,14 @@
+# Smithery configuration file
+# Documentation: https://smithery.ai/docs/config#smitheryyaml
+
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties: {} # Uses gh CLI authentication from the environment.
+  commandFunction: |-
+    (config) => ({
+      command: 'node',
+      args: ['build/index.js'],
+      env: {}
+    })
