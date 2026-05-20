@@ -9,6 +9,12 @@ Run directly via `npx`:
 npx mcp-oss-onramp
 ```
 
+### Direct Execution (CLI)
+You can also run the server with a token directly in your terminal:
+```bash
+MCP_OSS_ONRAMP_GITHUB_TOKEN="your_token_here" npx mcp-oss-onramp
+```
+
 ## MCP Configuration
 Add this to your AI agent's configuration:
 

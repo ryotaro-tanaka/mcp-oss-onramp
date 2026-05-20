@@ -311,7 +311,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       {
         name: "scout_issues",
-        description: "Scout a GitHub repository to discover truly available, beginner-friendly issues. Use this when a user wants to start contributing to OSS, needs a 'good first issue', or wants to verify if an issue is genuinely unassigned by cross-referencing linked Pull Requests (detecting 'ghost' tasks).",
+        description: "Scout a GitHub repository to discover truly available, beginner-friendly issues. This tool uses GitHub GraphQL for high-precision PR cross-referencing. \n\nIMPORTANT FOR AI AGENTS: To avoid rate limits and enable high-precision scouting, ensure the `MCP_OSS_ONRAMP_GITHUB_TOKEN` environment variable is set with a GitHub Personal Access Token. If unauthenticated, the tool fallbacks to a lower-precision REST mode.",
         inputSchema: {
           type: "object",
           properties: {
