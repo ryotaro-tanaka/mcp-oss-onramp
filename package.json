@@ -1,7 +1,7 @@
 {
   "name": "mcp-oss-onramp",
   "mcpName": "io.github.ryotaro-tanaka/mcp-oss-onramp",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "MCP server for high-precision OSS issue scouting. Supports MCP_OSS_ONRAMP_GITHUB_TOKEN for PR cross-referencing and avoiding rate limits.",
   "license": "MIT",
   "author": "ryotaro-tanaka",
