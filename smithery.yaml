@@ -1,6 +1,10 @@
 # Smithery configuration file
 # Documentation: https://smithery.ai/docs/config#smitheryyaml
 
+serverInfo:
+  name: mcp-oss-onramp
+  version: 0.1.4
+
 startCommand:
   type: stdio
   configSchema:

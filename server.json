@@ -6,12 +6,12 @@
     "url": "https://github.com/ryotaro-tanaka/mcp-oss-onramp.git",
     "source": "github"
   },
-  "version": "0.1.3",
+  "version": "0.1.4",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "mcp-oss-onramp",
-      "version": "0.1.3",
+      "version": "0.1.4",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"

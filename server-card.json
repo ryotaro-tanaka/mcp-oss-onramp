@@ -1,0 +1,11 @@
+{
+  "name": "mcp-oss-onramp",
+  "version": "0.1.4",
+  "description": "MCP server for high-precision OSS issue scouting. Supports MCP_OSS_ONRAMP_GITHUB_TOKEN for PR cross-referencing and avoiding rate limits.",
+  "tools": [
+    {
+      "name": "scout_issues",
+      "description": "Scout a GitHub repository to discover truly available, beginner-friendly issues."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "manifest_version": "0.2",
+  "name": "mcp-oss-onramp",
+  "display_name": "MCP OSS Onramp",
+  "version": "0.1.4",
+  "description": "MCP server for high-precision OSS issue scouting. Supports MCP_OSS_ONRAMP_GITHUB_TOKEN for PR cross-referencing and avoiding rate limits.",
+  "author": {
+    "name": "ryotaro-tanaka",
+    "url": "https://github.com/ryotaro-tanaka"
+  },
+  "homepage": "https://github.com/ryotaro-tanaka/mcp-oss-onramp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ryotaro-tanaka/mcp-oss-onramp.git"
+  },
+  "readme": "README.md",
+  "license": "MIT",
+  "server": {
+    "type": "node",
+    "entry_point": "build/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "build/index.js"
+      ],
+      "env": {
+        "MCP_OSS_ONRAMP_GITHUB_TOKEN": ""
+      }
+    }
+  }
+}
