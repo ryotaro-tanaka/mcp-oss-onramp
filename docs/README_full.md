@@ -104,8 +104,12 @@ mcpServers:
 ```
 
 ## Prerequisites
-- [GitHub CLI (gh)](https://cli.github.com/) (authenticated)
-- Node.js 18+
+- **GitHub Authentication (Recommended)**: 
+  - Set `MCP_OSS_ONRAMP_GITHUB_TOKEN` environment variable, OR
+  - Install [GitHub CLI (gh)](https://cli.github.com/) and authenticate via `gh auth login`.
+- **Node.js**: Version 18 or higher.
+
+*Note: The server works without authentication but will be rate-limited and provide lower precision (no PR cross-referencing).*
 
 ## License
 
