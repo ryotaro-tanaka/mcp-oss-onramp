@@ -1,0 +1,19 @@
+# Smithery configuration file
+# Documentation: https://smithery.ai/docs/config#smitheryyaml
+
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties:
+      MCP_OSS_ONRAMP_GITHUB_TOKEN:
+        type: string
+        description: GitHub Personal Access Token for high-precision scouting.
+  commandFunction: |-
+    (config) => ({
+      command: 'node',
+      args: ['build/index.js'],
+      env: {
+        MCP_OSS_ONRAMP_GITHUB_TOKEN: config.MCP_OSS_ONRAMP_GITHUB_TOKEN
+      }
+    })
