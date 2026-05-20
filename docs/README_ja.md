@@ -104,8 +104,12 @@ mcpServers:
 ```
 
 ## 前提条件
-- [GitHub CLI (gh)](https://cli.github.com/) (認証済みであること)
+- **GitHub認証 (推奨)**:
+  - `MCP_OSS_ONRAMP_GITHUB_TOKEN` 環境変数の設定、または
+  - [GitHub CLI (gh)](https://cli.github.com/) のインストールと `gh auth login` による認証。
 - Node.js 18+
+
+*注意: 認証なしでも動作しますが、レート制限が厳しくなり、PRの相互参照などの高精度なスキャンはスキップされます。*
 
 ## ライセンス
 
