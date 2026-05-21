@@ -111,6 +111,14 @@ mcpServers:
 
 *Note: The server works without authentication but will be rate-limited and provide lower precision (no PR cross-referencing).*
 
+## Tips: Finding Repositories to Contribute
+
+If you're not sure which repository to start with, check out these resources to find interesting projects, then use their repository name (e.g., `owner/repo`) with this tool:
+
+- **[HelloGitHub](https://github.com/521xueweihan/HelloGitHub)**: A popular repository that shares interesting open-source projects monthly.
+- **[GitHub Explore](https://github.com/explore)**: Discover projects based on your interests.
+- **[Up For Grabs](https://up-for-grabs.net/)**: A list of projects which have curated tasks for new contributors.
+
 ## License
 
 MIT
