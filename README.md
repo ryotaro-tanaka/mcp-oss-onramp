@@ -1,6 +1,7 @@
 # mcp-oss-onramp
 **AI Scout for truly available, beginner-friendly OSS issues.**
 
+[![SafeSkill 84/100](https://img.shields.io/badge/SafeSkill-84%2F100_Passes%20with%20Notes-yellow)](https://safeskill.dev/scan/ryotaro-tanaka-mcp-oss-onramp)
 [日本語版はこちら](./docs/README_ja.md) | [Full Documentation](./docs/README_full.md)
 
 ## Quick Start
